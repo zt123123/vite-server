@@ -2,28 +2,27 @@ const Koa = require("koa")
 const mime = require("mime/lite")
 const fs = require("fs")
 const path = require("path")
-const { getDemoFilePath, getNodeModulesFilePath, rewriteVueFileContent, compileTemplate, compileStyle, compileScript } = require("./util")
+const {
+  getWorkSpaceFilePath, getPackageFilePath, rewriteVueFileContent,
+  compileTemplate, compileStyle, compileScript, rewriteImportPath
+} = require("./util")
 const server = new Koa()
 
 server.use(async (ctx) => {
   const href = ctx.request.href
   const query = ctx.request.query
-  const requestPath = ctx.request.path
+  const requestPath = ctx.request.path // eg: /index.js
   const extnameWithDot = path.extname(href); //eg: .js .css ...
   const basename = path.basename(href); // eg: index.html index.js ...
   const extname = extnameWithDot.slice(1) // => html、js、css ...
   // handle index.html
-  if (ctx.request.path === '/') {
+  if (requestPath === '/') {
     ctx.set('Content-Type', mime.getType('.html'))
-    ctx.body = fs.createReadStream(getDemoFilePath('index.html'))
+    ctx.body = fs.createReadStream(getWorkSpaceFilePath('index.html'))
     return
   }
 
-  // TODO: rewrite node_modules
-  if(true){
-
-  }
-
+  // handle vue file query like: App.vue?type=template
   if (query.type) {
     let responseContent = ''
     if (query.type === "script") {
@@ -33,7 +32,8 @@ server.use(async (ctx) => {
     } else if (query.type === "style") {
       responseContent = compileStyle(ctx)
     }
-    ctx.type = mime.getType('.js')
+    ctx.set('Content-Type', mime.getType('.js'))
+    responseContent = await rewriteImportPath(responseContent)
     ctx.body = responseContent
     return
   }
@@ -51,12 +51,16 @@ server.use(async (ctx) => {
 
   // set response header
   ctx.set('Content-Type', mime.getType(extname))
-  if (ctx.request.path.includes('node_modules')) {
-    ctx.body = fs.createReadStream(getNodeModulesFilePath(ctx.request.path))
+  if (extname === "js") {
+    const content = await rewriteImportPath(fs.readFileSync(getWorkSpaceFilePath(basename), "utf-8"));
+    ctx.body = content
     return
   }
-  // FIXME: 404 whithout extname eg: import a from './a'
-  ctx.body = fs.createReadStream(getDemoFilePath(basename))
+  if (requestPath.includes('/@modules')) {
+    ctx.body = fs.createReadStream(getPackageFilePath(requestPath))
+    return
+  }
+  ctx.body = fs.createReadStream(getWorkSpaceFilePath(basename))
 })
 
 server.listen(3000, () => {

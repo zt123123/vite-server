@@ -5,11 +5,19 @@
   </div>
 </template>
 
-<script setup>
-import { ref } from "vue";
+<script>
+import { ref, defineComponent } from "vue";
 
-const msg = ref("vite");
-const reverse = () => (msg.value = msg.value.split("").join(""));
+export default defineComponent({
+  setup() {
+    const msg = ref("vite");
+    const reverse = () => (msg.value = msg.value.split("").join(""));
+    return {
+      msg,
+      reverse,
+    };
+  },
+});
 </script>
 
 <style>
