@@ -57,6 +57,7 @@ server.use(async (ctx) => {
     return
   }
   if (requestPath.includes('/@modules')) {
+    ctx.set('Content-Type', mime.getType('js'))
     ctx.body = fs.createReadStream(getPackageFilePath(requestPath))
     return
   }

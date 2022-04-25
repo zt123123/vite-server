@@ -79,7 +79,10 @@ const util = {
     const { template } = result.descriptor
     let code = ''
     if (template) {
-      code += `// template compiled to render function
+      code += `// main script
+import script from '${requestPath}?type=script'
+
+// template compiled to render function
 import { render } from '${requestPath}?type=template'
 
 // css
