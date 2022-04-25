@@ -4,12 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "supervisor src"
+    "dev": "supervisor -- src -p 1000"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@vue/compiler-sfc": "^3.2.33",
     "koa": "^2.13.4",
     "mime": "^3.0.0"
   },
