@@ -1,6 +1,12 @@
 import { createApp } from "vue"
 import { plus, sub, multi, divide } from "./a.js"
 import App from './App.vue'
+// precompile optiminize
+// import { forEach } from 'lodash-es'
+
+// forEach(["🍎", "🍌", "🍊"], (val) => {
+//   console.log(val);
+// })
 
 console.log(plus(1, 0));
 console.log(sub(3, 1));

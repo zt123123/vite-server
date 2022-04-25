@@ -11,7 +11,9 @@ function getCompileResult(ctx) {
   // exclude querystring
   const basename = path.basename(href).split('?')[0]; // App.vue?vue&type=xxx => App.vue
   const filePath = getWorkSpaceFilePath(basename)
-  return compiler.parse(fs.readFileSync(filePath, "utf-8"))
+  const parseRes = compiler.parse(fs.readFileSync(filePath, "utf-8"))
+  console.log(parseRes);
+  return parseRes
 }
 
 function getWorkSpaceFilePath(fileName) {
@@ -21,6 +23,7 @@ function getWorkSpaceFilePath(fileName) {
 async function rewriteImportPath(code) {
   await init
   // parse import statement & replace module path to '/@modules/xxx'
+  // see example src/test.import-parse.js
   const [imports] = parse(code);
   const str = new MagicString(code)
   imports.forEach(({ n, s, e }) => {
@@ -38,10 +41,9 @@ const util = {
   getPackageFilePath(fileName = '') {
     const packagePath = path.join(process.cwd(), fileName.replace(/@modules/, 'node_modules'))
     const pkgJson = fs.readFileSync(path.join(packagePath, 'package.json'), "utf-8")
-    // const { module } = JSON.parse(pkgJson)
-    // hack entry file
-    // console.log(path.join(packagePath, module));
-    return path.join(packagePath, 'dist/vue.runtime.esm-browser.js')
+    // esmodule entry file
+    const { module } = JSON.parse(pkgJson)
+    return path.join(packagePath, module)
   },
   compileTemplate(ctx) {
     const { descriptor, descriptor: { template: { content } } } = getCompileResult(ctx)
@@ -64,14 +66,26 @@ const util = {
       '\ndocument.head.appendChild(style)'
     return styleString
   },
-  compileScript(ctx) {
-    const { descriptor, descriptor: { script: { content } } } = getCompileResult(ctx)
-    console.log('--content',content);
-    const result = compiler.compileScript({
-      ...descriptor,
-      source: content
-    })
-    return result.content
+  async compileScript(ctx) {
+    const { descriptor } = getCompileResult(ctx)
+    let content = ''
+    if (descriptor.script) {
+      content = descriptor.script.content
+    } else if (descriptor.scriptSetup) {
+      // setup hack
+      content = `
+import { defineComponent, ref } from "vue";
+export default defineComponent({
+  setup(){
+    ${descriptor.scriptSetup.content}
+    return {
+      msg,
+      reverse
+    }
+  }
+})`
+    }
+    return await rewriteImportPath(content)
   },
   rewriteVueFileContent(ctx) {
     const requestPath = ctx.request.path
