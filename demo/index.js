@@ -1,6 +1,7 @@
 import { createApp } from "vue"
 import { plus, sub, multi, divide } from "./a.js"
 import App from './App.vue'
+import "./index.css"
 // precompile optiminize
 // import { forEach } from 'lodash-es'
 

@@ -4,7 +4,7 @@ const fs = require("fs")
 const path = require("path")
 const {
   getWorkSpaceFilePath, getPackageFilePath, rewriteVueFileContent,
-  compileTemplate, compileStyle, compileScript, rewriteImportPath
+  compileTemplate, compileStyle, compileScript, rewriteImportPath, generateCss
 } = require("./util")
 const server = new Koa()
 
@@ -51,6 +51,9 @@ server.use(async (ctx) => {
   } else if (extname === "js") {
     ctx.set('Content-Type', mime.getType(extname))
     ctx.body = await rewriteImportPath(fs.readFileSync(getWorkSpaceFilePath(basename), "utf-8"));
+  } else if (extname === "css") {
+    ctx.set('Content-Type', mime.getType('js'))
+    ctx.body = generateCss(fs.readFileSync(getWorkSpaceFilePath(basename), "utf-8"))
   } else if (requestPath.includes('/@modules')) {
     ctx.set('Content-Type', mime.getType('js'))
     ctx.body = await rewriteImportPath(fs.readFileSync(getPackageFilePath(requestPath), "utf-8"))

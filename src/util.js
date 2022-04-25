@@ -16,6 +16,15 @@ function getCompileResult(ctx) {
   return parseRes
 }
 
+function generateCss(code) {
+  return `
+  const style = document.createElement("style");
+  style.textContent = ${JSON.stringify(code)}
+  document.head.appendChild(style)
+  export default style
+  `
+}
+
 function getWorkSpaceFilePath(fileName) {
   return path.join(demoDir, fileName)
 }
@@ -38,6 +47,7 @@ const util = {
   getWorkSpaceFilePath,
   getCompileResult,
   rewriteImportPath,
+  generateCss,
   getPackageFilePath(fileName = '') {
     const packagePath = path.join(process.cwd(), fileName.replace(/@modules/, 'node_modules'))
     const pkgJson = fs.readFileSync(path.join(packagePath, 'package.json'), "utf-8")
@@ -62,8 +72,7 @@ const util = {
       source: content,
     })
 
-    const styleString = 'const style = document.createElement("style");\nstyle.textContent = ' + JSON.stringify(result.code) +
-      '\ndocument.head.appendChild(style)'
+    const styleString = generateCss(result.code)
     return styleString
   },
   async compileScript(ctx) {
