@@ -29,15 +29,19 @@ function getWorkSpaceFilePath(fileName) {
   return path.join(demoDir, fileName)
 }
 
-async function rewriteImportPath(code) {
+async function rewriteImportPath(code, packagePath='', fileName) {
   await init
   // parse import statement & replace module path to '/@modules/xxx'
   // see example src/test.import-parse.js
-  const [imports] = parse(code);
+  const [imports, exports] = parse(code);
   const str = new MagicString(code)
   imports.forEach(({ n, s, e }) => {
-    if (!n.startsWith('.') && !n.startsWith('..')) {
-      str.overwrite(s, e, `/@modules/${n}`)
+    if (!n.startsWith('.') && !n.startsWith('..') && !n.startsWith('/')) {
+      str.overwrite(s, e, `/@modules/${n}?pkg=${n}`)
+    }else{
+      if(packagePath){
+        str.overwrite(s, e, `/@modules/${packagePath}${n.slice(1)}`)
+      }
     }
   })
   return str.toString()
@@ -48,7 +52,7 @@ const util = {
   getCompileResult,
   rewriteImportPath,
   generateCss,
-  getPackageFilePath(fileName = '') {
+  getPackageFilePath(fileName = '', package='') {
     const packagePath = path.join(process.cwd(), fileName.replace(/@modules/, 'node_modules'))
     const pkgJson = fs.readFileSync(path.join(packagePath, 'package.json'), "utf-8")
     // esmodule entry file

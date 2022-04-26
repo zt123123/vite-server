@@ -48,15 +48,21 @@ server.use(async (ctx) => {
       ctx.set('Content-Type', mime.getType('.js'))
       ctx.body = responseContent
     }
-  } else if (extname === "js") {
+  } else if (extname === "js" && !requestPath.includes('/@modules')) { // user import
     ctx.set('Content-Type', mime.getType(extname))
     ctx.body = await rewriteImportPath(fs.readFileSync(getWorkSpaceFilePath(basename), "utf-8"));
   } else if (extname === "css") {
     ctx.set('Content-Type', mime.getType('js'))
     ctx.body = generateCss(fs.readFileSync(getWorkSpaceFilePath(basename), "utf-8"))
-  } else if (requestPath.includes('/@modules')) {
+  } else if (requestPath.includes('/@modules') && extname !== "js") { // node_modules parent import
     ctx.set('Content-Type', mime.getType('js'))
-    ctx.body = await rewriteImportPath(fs.readFileSync(getPackageFilePath(requestPath), "utf-8"))
+    ctx.body = await rewriteImportPath(fs.readFileSync(getPackageFilePath(requestPath), "utf-8"), query.pkg)
+  } else if (requestPath.includes('/@modules') && extname === "js") { // node_modules sub import
+    ctx.set('Content-Type', mime.getType('js'))
+    const res = requestPath.split('/')
+    const fileName = res[res.length - 1]
+    const packageName = res[res.length - 2]
+    ctx.body = await rewriteImportPath(fs.readFileSync(getPackageFilePath(requestPath), "utf-8"), packageName, fileName)
   } else {
     ctx.set('Content-Type', mime.getType(extname))
     ctx.body = fs.createReadStream(getWorkSpaceFilePath(basename))

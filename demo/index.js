@@ -3,7 +3,7 @@ import { plus, sub, multi, divide } from "./a.js"
 import App from './App.vue'
 import "./index.css"
 // precompile optiminize
-// import { forEach } from 'lodash-es'
+import { forEach } from 'lodash-es'
 
 // forEach(["🍎", "🍌", "🍊"], (val) => {
 //   console.log(val);
