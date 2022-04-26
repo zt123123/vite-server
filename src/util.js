@@ -52,8 +52,12 @@ const util = {
   getCompileResult,
   rewriteImportPath,
   generateCss,
-  getPackageFilePath(fileName = '', package='') {
+  getPackageFilePath(fileName = '') {
     const packagePath = path.join(process.cwd(), fileName.replace(/@modules/, 'node_modules'))
+    // handle node_modules sub import
+    if(path.extname(packagePath)===".js"){
+        return packagePath
+    }
     const pkgJson = fs.readFileSync(path.join(packagePath, 'package.json'), "utf-8")
     // esmodule entry file
     const { module } = JSON.parse(pkgJson)

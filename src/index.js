@@ -59,10 +59,7 @@ server.use(async (ctx) => {
     ctx.body = await rewriteImportPath(fs.readFileSync(getPackageFilePath(requestPath), "utf-8"), query.pkg)
   } else if (requestPath.includes('/@modules') && extname === "js") { // node_modules sub import
     ctx.set('Content-Type', mime.getType('js'))
-    const res = requestPath.split('/')
-    const fileName = res[res.length - 1]
-    const packageName = res[res.length - 2]
-    ctx.body = await rewriteImportPath(fs.readFileSync(getPackageFilePath(requestPath), "utf-8"), packageName, fileName)
+    ctx.body = await rewriteImportPath(fs.readFileSync(getPackageFilePath(requestPath), "utf-8"))
   } else {
     ctx.set('Content-Type', mime.getType(extname))
     ctx.body = fs.createReadStream(getWorkSpaceFilePath(basename))
